@@ -1,0 +1,123 @@
+name: Autograding Tests
+'on':
+- push
+- workflow_dispatch
+- repository_dispatch
+permissions:
+  checks: write
+  actions: read
+  contents: read
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Test file structure
+      id: test-file-structure
+      uses: education/autograding-io-grader@v1
+      with:
+        test-name: Test file structure
+        command: ls -l . src extra
+        input: ''
+        expected-output: tests([\S\s]*)extra:([\S\s]*)verslag.pdf([\S\s]*)src:([\S\s]*)main.pl
+        comparison-method: regex
+        timeout: 10
+    - name: Check grading integrity
+      id: check-grading-integrity
+      uses: education/autograding-io-grader@v1
+      with:
+        test-name: Check grading integrity
+        command: sha256sum tests/grading/*.js tests/grading/pgns/*
+        input: ''
+        expected-output: "fa51c731a10580aa47161e84d3fe4f6a9097152fde12650d33699c0d56cdbbb4
+          \ tests/grading/test.js\r\nc24fd994b9eca95c0df0c62bc438f92158657138acb66f171761dd2c0b33ebb2
+          \ tests/grading/pgns/random.01.0.pgn\r\n3da600305eac1aaba950a07ac2e7dd0e1d5bdf3278875548d121ca8ac3b522f2
+          \ tests/grading/pgns/random.01.1.pgn\r\n512317a73f74e5c5d01191094f52824371c57dc042618fa582228af175391f29
+          \ tests/grading/pgns/random.01.2.pgn\r\n25d6daacfb0e691f1402029fb88aa0c29c22ddc3350d03e30d1b37aa924957ba
+          \ tests/grading/pgns/random.01.3.pgn\r\n4813c70ccb109aab7435290cd63a90b92edeeb818966453aae3ba4bf7bfd2d10
+          \ tests/grading/pgns/random.03.0.pgn\r\n7184231f96686478a66b9e07b85bfb9b1d8ae697c472e284b19adb6e8df99b46
+          \ tests/grading/pgns/random.03.1.pgn\r\n1191b1ba242c52d12009e48840be20c6db616b9f23ce91b77753b1c6f688b460
+          \ tests/grading/pgns/random.03.2.pgn\r\n65cf9d4643e79112de37f171379c2a237d4d9ced54fc875d86ec8cd9831883a2
+          \ tests/grading/pgns/random.03.3.pgn\r\n4f7a1b2a89a83027bed6a55c658bc40077ff1019ac0d10d158575e1fda303676
+          \ tests/grading/pgns/random.10.0.pgn\r\n45b23c8daf2847c9ecb04f4b4d645b52eca0fafbb16fe0988f6b4754db48432a
+          \ tests/grading/pgns/random.10.1.pgn\r\nab9803e67561cfb411dab64f75d5732a7362319da4a4b55fdb1bc6fdf45bc803
+          \ tests/grading/pgns/random.10.2.pgn\r\n319a87669f9045ee156d92df6b235e285f5b9488f05614975e067815e191a30b
+          \ tests/grading/pgns/random.10.3.pgn\r\n2c932f447a0c3a410fc0e9420ddda89eadd601ad8925d55aee6f23290fc18f0e
+          \ tests/grading/pgns/random.11.0.pgn\r\n4d6a3173293fb60f4c875c03bc3ea8b1a9a9c6748ba99581148ba8a3f3db4c01
+          \ tests/grading/pgns/random.11.1.pgn\r\n93e8a9c56d609cad5e43ab7d038c1cfe02b9e547a910a3ecc5e342ee677a9777
+          \ tests/grading/pgns/random.11.2.pgn\r\n406ee1e5acb8461749148e3856503af6c1cb26e43b59d18e8745f70f8f178340
+          \ tests/grading/pgns/random.11.3.pgn\r\ne0629d02a4e41eb62138bd38bc88fdd12ff0b6318414c4cc062ad94bc60018cc
+          \ tests/grading/pgns/random.16.0.pgn\r\nd1fc12ee20d18d14f691efa06ad4b48124e04a8c368e435eb987a3679ad16f50
+          \ tests/grading/pgns/random.16.1.pgn\r\n9f1decbcfe35bbcd45bda71a8bb7b16fe0b274c9159b2accb62ec558ea43016a
+          \ tests/grading/pgns/random.16.2.pgn\r\n1dc3b8a07a7f0d554d4326684c6e294cafc86d56e8620ab7850137a0d155fe26
+          \ tests/grading/pgns/random.16.3.pgn\r\n755884e561af04b5b826a3514fc723389218cea603ca54eecd709f8f162830c8
+          \ tests/grading/pgns/random.25.0.pgn\r\n71334b07a520c3372fe23434faeb3c091725149f6b7b2c34b1ff622357dd566c
+          \ tests/grading/pgns/random.25.1.pgn\r\n159ee3c6aa9143da313cddf1bdd20c6c77c3273b72ad6c42286b2f2146f97c8e
+          \ tests/grading/pgns/random.25.2.pgn\r\n38c44e33bdd08c9dff10ef6cc9bd421a56e5481e2caeb0427486a7a260f31695
+          \ tests/grading/pgns/random.25.3.pgn\r\n034ef15fd3eda3ae986986cfcc7653dea2f8062c9951ec41064cac65153648a7
+          \ tests/grading/pgns/random.31.0.pgn\r\na6a4d4114fb3c2454333a9e668d88a7144af00cf551c8ebae2cea68c01ad57cb
+          \ tests/grading/pgns/random.31.1.pgn\r\n1467596400c6437e3039e4379b61675644589dad566a127f17b26ded90af1545
+          \ tests/grading/pgns/random.31.2.pgn\r\n37c1a3e52354c83407f8497a1e6dcafbd16c86f4838c3bf0a152969cf89524d6
+          \ tests/grading/pgns/random.31.3.pgn\r\nfe18b1d6b17a8bc8e569ee60aac277da8eef20de7cbb4416aebc78abdbd1ca9a
+          \ tests/grading/pgns/random.32.0.pgn\r\nb8ffd7f55dc9a7f9c30739800214099995aa4e8249929cffa6fff6662cdf2b20
+          \ tests/grading/pgns/random.32.1.pgn\r\n63f2173c79eb09418d02fe7ddcda7583ff20c1c54535e7485068e887f15a6a56
+          \ tests/grading/pgns/random.32.2.pgn\r\n8bf8f44ce63fb2d6bd66c6df84dd7e438fb9125adebde9504797b0fedfd96269
+          \ tests/grading/pgns/random.32.3.pgn\r\n7402296e1635cb75941f0a649898b7318c55f2d389c4d6b169fc804b4a11f403
+          \ tests/grading/pgns/random.40.0.pgn\r\n8d3535deb1e97f397320504954b8d7bd3e73fbae07d4961503e1dc9fa85ec583
+          \ tests/grading/pgns/random.40.1.pgn\r\ndb738d5c1b1582ba30372c48a552e01391b52dc05350b62b02f650ec1a1fcc9f
+          \ tests/grading/pgns/random.40.2.pgn\r\n04f36c985a371617f43e45b43bec5d58f5389a16ab58dffbdd82895207e7ead3
+          \ tests/grading/pgns/random.40.3.pgn\r\na574c7474b9538c4773aead5f8c5f8d733a0836ca51dd4d2b277cba1700da6fa
+          \ tests/grading/pgns/random.42.0.pgn\r\nab8c6a6ced8bcc05afa4653a4a5052d37d587495f493be1ede0655d8266ad7b9
+          \ tests/grading/pgns/random.42.1.pgn\r\n2c55584aa1a0a56dc837aeb241f0ebed404ede2a4ac2d2a6517602d846f0d291
+          \ tests/grading/pgns/random.42.2.pgn\r\ndf146d5f9d96887d21bb66c7fbe669602f27fb5f5f083eb52571b9e35d1e2577
+          \ tests/grading/pgns/random.42.3.pgn\r\n43fafc38989e58f239864af649ea1ebf5fda1f4fea4d2c0700e85279fe36938b
+          \ tests/grading/pgns/random.51.0.pgn\r\n5538d8662e9e31bac2c356657034e0fcff098cbefa8fe44325d93339b8f6214a
+          \ tests/grading/pgns/random.51.1.pgn\r\nabb773fc0f62cf6744deee301a74c038afff22fce02356b7f69980219dbec50a
+          \ tests/grading/pgns/random.51.2.pgn\r\nfcaa0d1223959f9d8fc4588ad2a635a4238f87200fb22fcd37ba07d77ae21b2c
+          \ tests/grading/pgns/random.51.3.pgn\r\ne9bdae3410bb67d705141077a011ad33c62802619d41c9a3fbdd4c1f6613390e
+          \ tests/grading/pgns/random.52.0.pgn\r\nd4ef88be597d822c73a6c9271be6572552f205aa635ca6cef32cf60f3c0a05ea
+          \ tests/grading/pgns/random.52.1.pgn\r\n3bfe38c2647e14051fe1c4bca90d878295f73afb768aaefe6fdc7589f13541a0
+          \ tests/grading/pgns/random.52.2.pgn\r\nb261b1bed2e3af2a2e9cf2128826525acbf408f92c0c5bca98a6020997be34fe
+          \ tests/grading/pgns/random.52.3.pgn\r\nca12a50e15af5d4089853695ab3f0d20466344b571a12eadeefaa9d8db2ccca1
+          \ tests/grading/pgns/random.64.0.pgn\r\n2771599aec0b79fe42dd78f1bbf790337fee94f633cf74b8fa7c6d17828dbd36
+          \ tests/grading/pgns/random.64.1.pgn\r\n2ab1e6af4bfb97092e897e1aca534605bb242debe0beaed438192eca3fd9e6a0
+          \ tests/grading/pgns/random.64.2.pgn\r\n9a9539f9bbc904e166af33631d165a4c2d7a13f583e5e569b698964f1e4f1405
+          \ tests/grading/pgns/random.64.3.pgn\r\n3c9dc64769c440649cb36ad233f3a5951a11d243e4e345b8416f796f07afb7e9
+          \ tests/grading/pgns/random.71.0.pgn\r\nfacea2ed593e585b206dbe51836115b378c81468ff976aa51a74c16390ad1b62
+          \ tests/grading/pgns/random.71.1.pgn\r\nc847f6879587ee92e14a6de461d2b96404461aa5fc4ac99195cdf65e8fe0cc75
+          \ tests/grading/pgns/random.71.2.pgn\r\na5dfb77cac489139467e9c3896ea296684833ff96d7e71909bb0d45f4862becc
+          \ tests/grading/pgns/random.71.3.pgn\r\n3821f6ee2ac77bc67eb2b7fe02df55eef2b4018c849da7ae45a41c842b5923c4
+          \ tests/grading/pgns/random.87.0.pgn\r\n7ceda64b0559938b66d06f18258438b8201cbc490256f8987963295baf3b57f1
+          \ tests/grading/pgns/random.87.1.pgn\r\n8419954adca683ced67960fd1d64b8dccf8e72b3052525b621ce2a7f1039fd57
+          \ tests/grading/pgns/random.87.2.pgn\r\n0a0bb58e3d1aace0c55532967e069d2d5649726e534b6ad7b6ea4d5aca16e08d
+          \ tests/grading/pgns/random.87.3.pgn\r\n662fca3e177eb4a29aea9bcdf4329e6d27a62691ae7ebac4a2e7d9b223775987
+          \ tests/grading/pgns/random.99.0.pgn\r\n0fd271e9fca3adf73acc66e0e22c9ada538ec4359e9d5de6130fb944f1a586b1
+          \ tests/grading/pgns/random.99.1.pgn\r\nffcb1f9e7db3cb8108b58c60090e422eba0158f008b91647ee6b7ed4edaaa504
+          \ tests/grading/pgns/random.99.2.pgn\r\n51b83d46d42ecebd8c8648a540458e963a512d8eb66459759d4e7eaa7e602542
+          \ tests/grading/pgns/random.99.3.pgn\r\n3a6b41fdbcc639a0ac654e6c96a331f96804018151ea9427e8a6ca7c49c7b54a
+          \ tests/grading/pgns/tags.0.pgn\r\n45c503ea6355f5310b5596bd5cc1578c37621f95913375b31e864fd4b0cb3104
+          \ tests/grading/pgns/tags.1.pgn\r\n88e14bdd80408a51d21fcc7e9f52688849ad36ebe04b2b8872fe85b581515a7b
+          \ tests/grading/pgns/tags.2.pgn\r\nd607862a42e310dbaf36a25e538b2a36a2fcf4f3625e45d769271e5254829ece
+          \ tests/grading/pgns/tags.3.pgn"
+        comparison-method: contains
+        timeout: 1
+    - name: Test I/O
+      id: test-i-o
+      uses: education/autograding-io-grader@v1
+      with:
+        test-name: Test I/O
+        command: npm run test.io -- src/main.pl
+        input: ''
+        expected-output: "/^((?!failed).)*$/s"
+        comparison-method: regex
+        timeout: 10
+    - name: Autograding Reporter
+      uses: education/autograding-grading-reporter@v1
+      env:
+        TEST-FILE-STRUCTURE_RESULTS: "${{steps.test-file-structure.outputs.result}}"
+        CHECK-GRADING-INTEGRITY_RESULTS: "${{steps.check-grading-integrity.outputs.result}}"
+        TEST-I-O_RESULTS: "${{steps.test-i-o.outputs.result}}"
+      with:
+        runners: test-file-structure,check-grading-integrity,test-i-o
