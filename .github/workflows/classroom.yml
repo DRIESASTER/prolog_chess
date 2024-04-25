@@ -105,11 +105,11 @@ jobs:
           ffcb1f9e7db3cb8108b58c60090e422eba0158f008b91647ee6b7ed4edaaa504  tests/grading/pgns/random.99.2.pgn
         comparison-method: contains
         timeout: 1
-    - name: Test I/O
-      id: test-i-o
+    - name: Simple I/O tests
+      id: simple-i-o-tests
       uses: education/autograding-io-grader@v1
       with:
-        test-name: Test I/O
+        test-name: Simple I/O tests
         setup-command: npm install ; ./.github/.install-swipl.sh
         command: npm run test.io -- src/main.pl
         input: ''
@@ -121,6 +121,6 @@ jobs:
       env:
         TEST-FILE-STRUCTURE_RESULTS: "${{steps.test-file-structure.outputs.result}}"
         CHECK-GRADING-INTEGRITY_RESULTS: "${{steps.check-grading-integrity.outputs.result}}"
-        TEST-I-O_RESULTS: "${{steps.test-i-o.outputs.result}}"
+        SIMPLE-I-O-TESTS_RESULTS: "${{steps.simple-i-o-tests.outputs.result}}"
       with:
-        runners: test-file-structure,check-grading-integrity,test-i-o
+        runners: test-file-structure,check-grading-integrity,simple-i-o-tests
