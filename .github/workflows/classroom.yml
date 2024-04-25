@@ -89,6 +89,7 @@ jobs:
           b261b1bed2e3af2a2e9cf2128826525acbf408f92c0c5bca98a6020997be34fe  tests/grading/pgns/random.52.3.pgn
           b8ffd7f55dc9a7f9c30739800214099995aa4e8249929cffa6fff6662cdf2b20  tests/grading/pgns/random.32.1.pgn
           c24fd994b9eca95c0df0c62bc438f92158657138acb66f171761dd2c0b33ebb2  tests/grading/pgns/random.01.0.pgn
+          c2a5edb7495d312091b5071429f429bb8e4f85785d55bbe43dde136f5a171cfa  tests/grading/test.js
           c847f6879587ee92e14a6de461d2b96404461aa5fc4ac99195cdf65e8fe0cc75  tests/grading/pgns/random.71.2.pgn
           ca12a50e15af5d4089853695ab3f0d20466344b571a12eadeefaa9d8db2ccca1  tests/grading/pgns/random.64.0.pgn
           d1fc12ee20d18d14f691efa06ad4b48124e04a8c368e435eb987a3679ad16f50  tests/grading/pgns/random.16.1.pgn
@@ -98,7 +99,6 @@ jobs:
           df146d5f9d96887d21bb66c7fbe669602f27fb5f5f083eb52571b9e35d1e2577  tests/grading/pgns/random.42.3.pgn
           e0629d02a4e41eb62138bd38bc88fdd12ff0b6318414c4cc062ad94bc60018cc  tests/grading/pgns/random.16.0.pgn
           e9bdae3410bb67d705141077a011ad33c62802619d41c9a3fbdd4c1f6613390e  tests/grading/pgns/random.52.0.pgn
-          fa51c731a10580aa47161e84d3fe4f6a9097152fde12650d33699c0d56cdbbb4  tests/grading/test.js
           facea2ed593e585b206dbe51836115b378c81468ff976aa51a74c16390ad1b62  tests/grading/pgns/random.71.1.pgn
           fcaa0d1223959f9d8fc4588ad2a635a4238f87200fb22fcd37ba07d77ae21b2c  tests/grading/pgns/random.51.3.pgn
           fe18b1d6b17a8bc8e569ee60aac277da8eef20de7cbb4416aebc78abdbd1ca9a  tests/grading/pgns/random.32.0.pgn
