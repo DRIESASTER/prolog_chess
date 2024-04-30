@@ -18,9 +18,9 @@ async function main() {
     for (const file of files) {
         const result = await test(path + file);
         console.log(`${file}: ${result ? 'passed' : 'failed'}`);
-        success &= result;
+        success = success && result;
     }
-    return true;
+    return success;
 }
 
 function test(file) {
