@@ -105,22 +105,11 @@ jobs:
           ffcb1f9e7db3cb8108b58c60090e422eba0158f008b91647ee6b7ed4edaaa504  tests/grading/pgns/random.99.2.pgn
         comparison-method: contains
         timeout: 1
-    - name: Simple I/O tests
-      id: simple-i-o-tests
-      uses: education/autograding-io-grader@v1
-      with:
-        test-name: Simple I/O tests
-        setup-command: npm install ; ./.github/.install-swipl.sh
-        command: npm run test.io -- src/main.pl
-        input: ''
-        expected-output: "/^((?!failed).)*$/s"
-        comparison-method: regex
-        timeout: 60
-    - name: Test parsing
-      id: test-parsing
+    - name: I/O tests
+      id: i-o-tests
       uses: education/autograding-command-grader@v1
       with:
-        test-name: Test parsing
+        test-name: I/O tests
         setup-command: npm install ; ./.github/.install-swipl.sh
         command: npm run test.io -- src/main.pl
         timeout: 60
@@ -129,7 +118,6 @@ jobs:
       env:
         TEST-FILE-STRUCTURE_RESULTS: "${{steps.test-file-structure.outputs.result}}"
         CHECK-GRADING-INTEGRITY_RESULTS: "${{steps.check-grading-integrity.outputs.result}}"
-        SIMPLE-I-O-TESTS_RESULTS: "${{steps.simple-i-o-tests.outputs.result}}"
-        TEST-PARSING_RESULTS: "${{steps.test-parsing.outputs.result}}"
+        I-O-TESTS_RESULTS: "${{steps.i-o-tests.outputs.result}}"
       with:
-        runners: test-file-structure,check-grading-integrity,simple-i-o-tests,test-parsing
+        runners: test-file-structure,check-grading-integrity,i-o-tests
