@@ -121,7 +121,7 @@ jobs:
       uses: education/autograding-command-grader@v1
       with:
         test-name: Test parsing
-        setup-command: npm i
+        setup-command: npm install ; ./.github/.install-swipl.sh
         command: npm run test.io -- src/main.pl
         timeout: 60
     - name: Autograding Reporter
