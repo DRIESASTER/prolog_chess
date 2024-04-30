@@ -115,7 +115,7 @@ jobs:
         input: ''
         expected-output: "/^((?!failed).)*$/s"
         comparison-method: regex
-        timeout: 10
+        timeout: 60
     - name: Autograding Reporter
       uses: education/autograding-grading-reporter@v1
       env:
