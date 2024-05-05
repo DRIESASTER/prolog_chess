@@ -16,7 +16,7 @@ jobs:
       uses: actions/checkout@v4
     - name: Test file structure
       id: test-file-structure
-      uses: education/autograding-io-grader@v1
+      uses: classroom-resources/autograding-io-grader@v1
       with:
         test-name: Test file structure
         setup-command: ''
@@ -27,7 +27,7 @@ jobs:
         timeout: 10
     - name: Check grading integrity
       id: check-grading-integrity
-      uses: education/autograding-io-grader@v1
+      uses: classroom-resources/autograding-io-grader@v1
       with:
         test-name: Check grading integrity
         setup-command: ''
@@ -38,6 +38,7 @@ jobs:
           04f36c985a371617f43e45b43bec5d58f5389a16ab58dffbdd82895207e7ead3  tests/grading/pgns/random.40.3.pgn
           0a0bb58e3d1aace0c55532967e069d2d5649726e534b6ad7b6ea4d5aca16e08d  tests/grading/pgns/random.87.3.pgn
           0fd271e9fca3adf73acc66e0e22c9ada538ec4359e9d5de6130fb944f1a586b1  tests/grading/pgns/random.99.1.pgn
+          10c93b765d6d767548c6d8be2c42e465b32976b50f667d7c3e3de6d8733a8160  tests/grading/test.js
           1191b1ba242c52d12009e48840be20c6db616b9f23ce91b77753b1c6f688b460  tests/grading/pgns/random.03.2.pgn
           1467596400c6437e3039e4379b61675644589dad566a127f17b26ded90af1545  tests/grading/pgns/random.31.2.pgn
           159ee3c6aa9143da313cddf1bdd20c6c77c3273b72ad6c42286b2f2146f97c8e  tests/grading/pgns/random.25.2.pgn
@@ -89,7 +90,6 @@ jobs:
           b261b1bed2e3af2a2e9cf2128826525acbf408f92c0c5bca98a6020997be34fe  tests/grading/pgns/random.52.3.pgn
           b8ffd7f55dc9a7f9c30739800214099995aa4e8249929cffa6fff6662cdf2b20  tests/grading/pgns/random.32.1.pgn
           c24fd994b9eca95c0df0c62bc438f92158657138acb66f171761dd2c0b33ebb2  tests/grading/pgns/random.01.0.pgn
-          c2a5edb7495d312091b5071429f429bb8e4f85785d55bbe43dde136f5a171cfa  tests/grading/test.js
           c847f6879587ee92e14a6de461d2b96404461aa5fc4ac99195cdf65e8fe0cc75  tests/grading/pgns/random.71.2.pgn
           ca12a50e15af5d4089853695ab3f0d20466344b571a12eadeefaa9d8db2ccca1  tests/grading/pgns/random.64.0.pgn
           d1fc12ee20d18d14f691efa06ad4b48124e04a8c368e435eb987a3679ad16f50  tests/grading/pgns/random.16.1.pgn
@@ -107,14 +107,14 @@ jobs:
         timeout: 1
     - name: I/O tests
       id: i-o-tests
-      uses: education/autograding-command-grader@v1
+      uses: classroom-resources/autograding-command-grader@v1
       with:
         test-name: I/O tests
         setup-command: npm install ; ./.github/.install-swipl.sh
         command: npm run test.io -- src/main.pl
         timeout: 60
     - name: Autograding Reporter
-      uses: education/autograding-grading-reporter@v1
+      uses: classroom-resources/autograding-grading-reporter@v1
       env:
         TEST-FILE-STRUCTURE_RESULTS: "${{steps.test-file-structure.outputs.result}}"
         CHECK-GRADING-INTEGRITY_RESULTS: "${{steps.check-grading-integrity.outputs.result}}"
