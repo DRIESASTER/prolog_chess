@@ -26,17 +26,17 @@ async function main() {
 function test(file) {
     return new Promise((resolve) => {
         const engine = spawn(swipl, ["-t", "halt", "-f", "-q", "-O", project, file]);
+        engine.on('close', (code) => {
+            if (code !== 0) {
+                resolve(false);
+            }
+        });
         engine.stdout.on('data', (data) => {
             try {
                 const pgn = data.toString().replace("\r", "").trim();
                 chess.loadPgn(pgn);
                 resolve(true);
-            } catch (e) {
-                resolve(false);
-            }
-        });
-        engine.stderr.on('data', () => {
-            resolve(false);
+            } catch (e) {}
         });
     });
 }
