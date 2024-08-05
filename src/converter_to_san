@@ -1,0 +1,101 @@
+:- module(converter_to_san, [convert_to_san/7]).
+%module om moves vanuit inwendig coordinaten systeem naar SAN te vertalen
+:- use_module(board).
+:- use_module(rules).
+:- use_module(checks).
+
+%zet move om naar SAN notatie
+convert_to_san(Board, Player, [FromRow, FromCol], [ToRow, ToCol],Promotion,History, SAN) :-
+(   is_castling_move(Board,FromRow, FromCol, ToRow, ToCol, SAN)
+;
+    piece_at(Board, FromRow, FromCol, Piece),
+    number_to_file(FromCol, _),
+    number_to_file(ToCol, ToFile),
+    number_to_rank(FromRow, _),
+    number_to_rank(ToRow, ToRank),
+    piece_identity(Piece, PieceChar),
+    disambiguate_move(Board, Player, Piece, FromRow, FromCol, ToRow, ToCol, Disamb, History),
+    capture_notation(Board, Piece,FromRow, FromCol, ToRow, ToCol, Capture),
+    move_results_in_check(Board, Player, FromRow-FromCol, ToRow-ToCol, Promotion,History, CheckStatus),
+    (   Promotion == none
+    ->  atomic_list_concat([PieceChar, Disamb, Capture, ToFile, ToRank, CheckStatus], SAN)
+    ;   upcase_atom(Promotion, PromotionChar),
+        atomic_list_concat([PieceChar, Disamb, Capture, ToFile, ToRank, '=', PromotionChar, CheckStatus], SAN)
+    )
+).
+
+%checked of move in schaak(mat) zal resulteren (+ of # toevoegen)
+move_results_in_check(Board, Player, From, To, Promotion, History, CheckStatus) :-
+    rules:enemy_color(Player, Opponent),
+    (Promotion = none -> 
+        apply_move(Board, Player, From, To, History, NewHistory, NewBoard)
+    ;   apply_move(Board, Player, From, To, Promotion, History, NewHistory, NewBoard)
+    ),
+    check_game_state(NewBoard, Opponent, NewHistory, State),
+    add_state_char(State, CheckStatus).
+
+add_state_char(checkmate, '#'):-!.
+add_state_char(check, '+'):-!.
+add_state_char(_, '').
+
+
+piece_identity(Piece, '') :-
+    member(Piece, ['P', 'p']), !.
+piece_identity(Piece, PieceChar) :-
+    upcase_atom(Piece, UCase),
+    atom_chars(UCase, [PieceChar]).
+
+%als to coordinaat niet leeg is is het een capture (we weten al dat move legaal is)
+capture_notation(Board, Piece, _,FromCol, ToRow, ToCol, Capture) :-
+    (piece_type(Piece,pawn),FromCol \= ToCol -> number_to_file(FromCol, FromFile), atom_concat(FromFile, 'x', Capture))
+    ;
+    (\+ empty_at(Board, ToRow, ToCol) -> Capture = 'x')
+    ;   
+    Capture = ''.
+
+%kijkt of meerdere pieces van zelfde type naar to coordinate kunnen gaan
+disambiguate_move(Board, _, Piece, _, _, ToRow, ToCol, Disamb, _) :-
+    piece_type(Piece, pawn),
+    \+ empty_at(Board, ToRow, ToCol),
+    !,
+    Disamb = ''. 
+
+%afhankelijk van waarom ambigous, file of rank dat char/digit toevoegen
+disambiguate_move(Board, Player, Piece, FromRow, FromCol, ToRow, ToCol, Disamb, History) :-
+    findall([FR, FC], 
+        (   piece_at(Board, FR, FC, Piece),
+            (FR \= FromRow ; FC \= FromCol), 
+            rules:legal_move(Board, Player, FR-FC, ToRow-ToCol, History)
+        ), SimilarMoves),
+    select_disambiguation(SimilarMoves, FromRow, FromCol, Disamb).
+
+select_disambiguation(SimilarMoves, FromRow, FromCol, Disamb) :-
+    findall(Col, (member([_, Col], SimilarMoves)), OtherCols),
+    findall(Row, (member([Row, _], SimilarMoves)), OtherRows),
+    (   delete(OtherCols, FromCol, UniqueCols), UniqueCols = []
+    -> 
+        (   delete(OtherRows, FromRow, UniqueRows), UniqueRows = []
+        ->  Disamb = ''
+        ;   number_to_rank(FromRow, Rank), Disamb = Rank
+        )
+    ;   number_to_file(FromCol, File), Disamb = File
+    ).
+
+number_to_file(Col, File) :-
+    Code is 96 + Col,
+    char_code(File, Code).
+
+number_to_rank(Row, Rank) :-
+    Rank is Row.
+
+%basic castling move check voor piece types en coordinaten (we weten al dat move legaal is)
+is_castling_move(Board, FromRow, FromCol, ToRow, ToCol, Type) :-
+    piece_at(Board, FromRow, FromCol, Piece),
+    piece_type(Piece, king),
+    FromRow == ToRow,
+    abs(FromCol - ToCol) =:= 2, 
+    (   FromRow = 1, FromCol = 5, ToCol = 7, Type = 'O-O';
+        FromRow = 1, FromCol = 5, ToCol = 3, Type = 'O-O-O';
+        FromRow = 8, FromCol = 5, ToCol = 7, Type = 'O-O';
+        FromRow = 8, FromCol = 5, ToCol = 3, Type = 'O-O-O'
+    ).
