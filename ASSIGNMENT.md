@@ -10,7 +10,7 @@ Je mag je dus beperken tot het implementeren van de schaakcomputer als een input
 Je programma wordt als volgt opgeroepen:
 
 ```bash
-> swipl -t halt -f -q -O ./main.pl -- {bestandsnaam}
+> swipl -t halt -f -q -O ./src/main.pl -- {bestandsnaam}
 ```
 
 Het PGN formaat bestaat uit een reeks optionele tags die de metadata van het spel voorstellen, gevolgd door de zetten van het spel in de korte algebraïsche notatie (SAN).
@@ -31,7 +31,7 @@ De zwartspeler kan hier echter wit schaakmat zetten met 1 zet.
 Als we dit bestand dus aan je schaakcomputer geven is de verwachte output alsvolgt:
 
 ```bash
-> swipl -t halt -f -q -O ./main.pl -- fool.pgn
+> swipl -t halt -f -q -O ./src/main.pl -- fool.pgn
 1. g4 e5 2. f3 Qh4# 0-1
 ```
 
@@ -52,7 +52,7 @@ Hieronder vind je een voorbeeld van de output voor het "TEST" argument, waarbij 
 Enkel de eerste vier lijnen worden getoond.
 
 ```bash
-> swipl -t halt -f -q -O ./main.pl -- examples/london.pgn TEST
+> swipl -t halt -f -q -O ./src/main.pl -- examples/london.pgn TEST
 1. d4 d5 2. Nf3 Nd7
 1. d4 d5 2. Nf3 Nc6
 1. d4 d5 2. Nf3 Na6
@@ -77,7 +77,150 @@ De schaakvariant wordt in de PGN notatie aangeduid met de `Rules` tag:
 [Rules "koth"]
 ```
 
-Meer uitleg over de PGN notatie vind je in de sectie *Portable Game Notation (PGN)*.
+Meer uitleg over de PGN notatie vind je in de sectie [Portable Game Notation (PGN)](#portable-game-notation-pgn).
+
+## 2e zit: Interactieve modus
+
+Als uitbreiding op de opgave, moet je in de 2de zit een interactieve modus toevoegen aan je schaakcomputer.
+Zodat een persoon via de commandline tegen jouw computer kan schaken. Deze modus wordt als volgt opgeroepen:
+
+```bash
+> swipl -t halt -f -q -O ./src/main.pl -- {bestandsnaam} GAME
+```
+
+De input van de gebruiker in deze modus zal via textuele commando's gebeuren.
+
+Hierbij kan **optioneel** een bestandsnaam meegegeven worden, dit is dan de beginopstelling voor het spel.
+Op deze manier kan je een interactief spel pauzeren en heropstarten.
+
+Je dient volgende functionaliteit te ondersteunen:
+
+- (her-)starten van een interatief spel met argument "GAME"
+- beginmenu tonen bij nieuw spel (kiezen van schaakvariant, kleur, en naam)
+- visuele representatie van het bord
+- mogelijkheid om een zet te maken
+- opslaan van het spel naar een bestand
+- checkmate weergeven
+- stoppen van het spel
+
+Hieronder vind je meer uitleg over elk onderdeel.
+
+### Visuele representatie van het bord
+
+Tijdens de interactieve modus, is het de bedoeling dat het volledige scherm hertekenend wordt als het bord bijgewerkt wordt. Gebruik hiervoor de [ANSI X3.64 Escape sequences](https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797). Gebruik steeds de hexadecimale representaties. Je dient de ANSI Escape sequences enkel te gebruiken in de interactieve modus. In prolog wordt het ESC karakter dan: "\x1B\", en het leeg maken van het scherm bijvoorbeeld:
+
+```prolog
+% ANSI ESC code to clear entire screen
+clear("\x1B\c").
+```
+
+De visuele representatie moet het huidige bord duidelijk weergeven met kolom en rij nummers, en steeds vanuit het perspectief van de gebruiker.
+
+Als de speler wit is, dan is het bord als volgt georiënteerd:
+
+```bash
++---+---+---+---+---+---+---+---+
+| r | n | b | q | k | b | n | r | 8
++---+---+---+---+---+---+---+---+
+| p | p | p | p | p | p | p | p | 7
++---+---+---+---+---+---+---+---+
+|   |   |   |   |   |   |   |   | 6
++---+---+---+---+---+---+---+---+
+|   |   |   |   |   |   |   |   | 5
++---+---+---+---+---+---+---+---+
+|   |   |   |   |   |   |   |   | 4
++---+---+---+---+---+---+---+---+
+|   |   |   |   |   |   |   |   | 3
++---+---+---+---+---+---+---+---+
+| P | P | P | P | P | P | P | P | 2
++---+---+---+---+---+---+---+---+
+| R | N | B | Q | K | B | N | R | 1
++---+---+---+---+---+---+---+---+
+  a   b   c   d   e   f   g   h
+
+make a move:
+```
+
+In dit voorbeeld worden de stukken op het bord aangeduid met de Engelse aanduiding van het stuk, in hoofdletters voor de witte stukken en kleine letters voor de zwarte stukken.
+
+Je mag de representatie van het voorbeeld hierboven overnemen, maar je bent vrij om je eigen representatie te kiezen.
+Je visuele representatie moet voldoen aan de volgende eisen:
+
+- kolom en rij nummers weergeven (letters voor kolommen)
+- altijd vanuit het perspectief van de gebruiker
+- de witte en zwarte stukken zijn duidelijk onderscheiden
+
+### Beginmenu
+
+Bij het starten van een nieuw spel toon je een beginmenu, waar de speler de volgende informatie geeft:
+
+1. de schaakvariant kan kiezen (classic of koth)
+2. de kleur van de speler (wit of zwart)
+3. de naam van de speler
+
+Hoe je commandline interface van het beginmenu werkt kies je zelf, maar het moet duidelijk zijn voor de speler.
+Hieronder geven we een simpel voorbeeld van hoe dit er kan uitzien:
+
+```bash
+Welcome to the chess game!
+Please choose a variant: 1. classic (default) 2. koth
+```
+
+Beschrijf duidelijk in jouw verslag hoe je interactieve modus werkt.
+Zo moet de gebruiker in het voorbeeld hierboven op de "1" of "2" keyboardtoets drukken om de schaakvariant te kiezen, of simpelweg op "Enter" om de default waarde te kiezen.
+
+Als je een bestandsnaam meegeeft bij het oproepen van je schaakcomputer, dan moet je die informatie uit het pgn bestand halen en het spel onmiddellijk starten vanuit die positie.
+Je toont dan geen beginmenu.
+
+Zijn er bepaalde tags niet aanwezig in het bestand, dan gebruik je de volgende default waardes:
+
+- de schaakvariant is "classic"
+- de kleur van de speler is wit
+- de naam van de speler is "Player"
+
+### Invoer van de speler
+
+De speler geeft zijn zet via de commandline door als een SAN zet. Dit gebeurt als volgt:
+
+1. Ingeven van de move, bv "Be5", gevolgt door een "Enter"
+2. Het stuk wordt verplaatst naar de nieuwe coordinaten, als de zet niet legaal verandert er niets
+
+Terwijl je schaakcomputer een zet berekend, hoef je geen input te verwerken.
+
+Naast de SAN zetten moet je ook de volgende commando's ondersteunen:
+
+- opslaan van een spel: "save" gevolgd door een "Enter"
+- stoppen van het spel: "quit" of "resign" gevolgd door een "Enter"
+
+### Opslaan en starten van een interactief spel
+
+Je schaakcomputer moet een interactief spel kunnen starten en stoppen.
+
+Het starten van een gloednieuw spel gebeurt door het argument "GAME" mee te geven aan je schaakcomputer.
+
+```bash
+> swipl -t halt -f -q -O ./src/main.pl -- GAME
+```
+
+Geef je een bestandsnaam mee, dan wordt het spel geladen vanuit dat pgn bestand.
+
+Tijdens het spelen moet een speler het spel ook kunnen opslaan naar een bestand. Dit gebeurt door het commando "save" te geven, gevolgd door een "Enter" (zoals een zet maken).
+Als er geen bestandsnaam meegegeven werd bij het oproepen van je schaakcomputer, wordt de speler gevraagd om een bestandsnaam in te geven.
+
+Een voorbeeld van hoe dit er kan uitzien:
+
+```bash
+Please enter a filename: mygame.pgn
+```
+
+### Checkmate en stoppen van het spel
+
+Als een speler (of de computer) schaakmat staat, moet dit duidelijk weergegeven worden op het scherm.
+Dit kan bijvoorbeeld door een extra regel toe te voegen onderaan het bord met de melding "Checkmate!".
+
+Je mag in dat geval ook geen zetten meer aanvaarden, maar wel nog de andere commando's (opslaan en stoppen).
+
+Een speler moet ook het spel vroegtijdig kunnen stoppen. Dit kan door het commando "quit" of "resign" te geven, gevolgd door een "Enter".
 
 ## Niet functionele eisen
 
@@ -106,6 +249,7 @@ om na te gaan of je alle onderdelen hebt afgewerkt.
 
 - [ ] Schaakcomputer
 - [ ] King of the Hill regels
+- [ ] Interactieve modus
 - [ ] Code documentatie
 - [ ] Testcode
 - [ ] Test functionaliteit
@@ -265,7 +409,7 @@ Je directory structuur ziet er dus ongeveer zo uit:
 
 ## Deadline
 
-Het project moet ingediend zijn op 10/05/2024 om 23:59 CEST.
+Het project moet ingediend zijn op 18/08/2024 om 20:00 CEST.
 
 # Algemene richtlijnen
 
