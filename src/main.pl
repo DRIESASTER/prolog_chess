@@ -37,10 +37,7 @@ handle_args([]) :-
 
 %start een spel als er geen argumenten meegegevene zijn (interactieve modus 2e zit)
 start_game :-
-    set_filename(''),
-    initialize_game_settings(Variant, _, PWhite, _, AI),
-    initial_board(Board),
-    play_game(Board, white, AI, Variant, PWhite, [], [], _).
+    play_default_game.
 
 % start het spel als opgeroepen vanuit swipl [main].
 game(game(Tags, Moves), Tags, Moves).

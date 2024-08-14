@@ -48,7 +48,6 @@ choose_name(Name) :-
     (NameInput = "" -> Name = "Player"; Name = NameInput).
 
 % initaliseerd een aantal basis game instellingen
-% Only ask for missing settings
 initialize_game_settings(Variant, Color, Name, Player, AI) :-
     (var(Variant) -> choose_variant(Variant); true),
     (var(Color) -> choose_color(Color); true),
@@ -56,11 +55,11 @@ initialize_game_settings(Variant, Color, Name, Player, AI) :-
     determine_players(Color, Player, AI),
     (Player = white -> initialize_game_state(Name, 'ai') ; initialize_game_state('ai', Name)).
 
-% Determine players based on chosen color
+%spelerkleur is omgekeerd van AI kleur basically
 determine_players(Color, Player, AI) :-
     (Color = white -> Player = white, AI = black; Player = black, AI = white).
     
-%trekt elke relevante settings uit de tags van het pgn bestand
+%haalt elke relevante settings uit de tags van het pgn bestand
 extract_settings([], 'Player', none, classic, '*') :- !,
     set_defaults.
 
@@ -97,31 +96,32 @@ update_and_display_scores(_) :-
 % speciale commandos regelen
 handle_special_commands("save", Variant, State, Moves) :-!,
     format_previous_moves(Moves, 1, white, stalemate, MovesStr),
-    filename(F),
+    get_filename(F),
     save_game(MovesStr, Variant, State, F),
     halt.
 
 handle_special_commands("quit", _, _, _) :-!,
-    write('Game terminated.'), nl,
+    write('Quitting game without saving...'), nl,
+    abort.
+
+handle_special_commands("resign", _, _, _) :-!,
+    write('Quitting game without saving...'), nl,
     abort.
 
 handle_special_commands(_, _, _, _).
 
+get_filename(Name):-
+    filename(Name),!.
 
-save_game(MovesStr,Variant,State, '') :- !,
-    player(white, PW),
-    player(black, PB),
-    % score(PW, Wscore),
-    % score(PB, Bscore),
+get_filename(Name) :-
+    write('Please enter the filename you want to save to: '),
+    read_line_to_codes(user_input, Codes),
+    string_codes(InputName, Codes),
+    split_string(InputName, ".", "", [Base|_]),
+    string_concat(Base, ".pgn", Name),nl,
+    write('Saving game to: '),
+    write(Name).
 
-    open('saved.pgn', write, Stream),
-
-    format(Stream, '[White "~w"]\n', [PW]),
-    format(Stream, '[Black "~w"]\n', [PB]),
-    format(Stream, '[Rules "~w"]\n', [Variant]),
-    write_result(Stream, State),
-    write(Stream, MovesStr),
-    close(Stream).
 
 save_game(MovesStr, Variant,State, Filename) :-
     player(white, PW),

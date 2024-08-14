@@ -78,6 +78,13 @@ replace_in_board([H|T], I, NewRow, [H|R]) :-
     NI is I - 1,
     replace_in_board(T, NI, NewRow, R).
 
+
+apply_move(Board,Color, FromRow-FromCol, ToRow-ToCol,History,NewHistory, NewBoard) :-
+    FromRow = 4, FromCol =4, ToRow = 3, ToCol = 5,!,
+    piece_at(Board,FromRow,FromCol,Piece),
+    rules:legal_move(Board, Color, FromRow-FromCol, ToRow-ToCol,History),
+    execute_move(Board, FromRow, FromCol, ToRow, ToCol, Piece, Color,History,NewHistory, NewBoard).
+
 % een move uitvoeren door middel van om te zetten van PGN naar coordinatensysteem en te checken of de move legaal is en dan uiteindelijk te executen
 apply_move(Board,Color, FromRow-FromCol, ToRow-ToCol,History,NewHistory, NewBoard) :-
     piece_at(Board,FromRow,FromCol,Piece),
@@ -92,12 +99,12 @@ apply_move(Board, Color, FromRow-FromCol, ToRow-ToCol, PromotionPiece, History, 
 
 %check voor rokade
 execute_move(Board, FromRow, FromCol, ToRow, ToCol, Piece, Color,History,NewHistory, NewBoard) :-
-    downcase_atom(Piece, LoPiece),(LoPiece == 'k'),castling_move(FromRow-FromCol, ToRow-ToCol, RookFrom-RookTo), apply_castling(Board, FromRow-FromCol, ToRow-ToCol, RookFrom, RookTo, NewBoard), update_move_history(FromRow-FromCol, ToRow-ToCol, Piece, Color, History, NewHistory).
+    downcase_atom(Piece, LoPiece),(LoPiece == 'k'),castling_move(FromRow-FromCol, ToRow-ToCol, RookFrom-RookTo),!, apply_castling(Board, FromRow-FromCol, ToRow-ToCol, RookFrom, RookTo, NewBoard), update_move_history(FromRow-FromCol, ToRow-ToCol, Piece, Color, History, NewHistory).
 
 %check voor en passant
 execute_move(Board, FromRow, FromCol, ToRow, ToCol, Piece, Color,History, NewHistory, NewBoard) :-
     %we weten al dat move legaal is, dit is simpelste detectie in board of move en passant zal zijn (test niet op legaliteit)
-    valid_en_passant(Board,FromRow,FromCol,ToRow,ToCol,Color, History),
+    valid_en_passant(Board,FromRow,FromCol,ToRow,ToCol,Color, History),!,
     apply_en_passant(Board, FromRow-FromCol, ToRow-ToCol, Piece, Color,History, NewHistory, NewBoard),
     update_move_history(FromRow-FromCol, ToRow-ToCol, Piece, Color, History, NewHistory).
 
@@ -151,16 +158,16 @@ print_board(Board) :-
     print_rows(FlippedBoard, 8),
     write('  a   b   c   d   e   f   g   h'), nl.
 
-% ANSI Escape code om het hele scherm te wissen
+%gebruik van ansi escape codes voor scherm leeg te maken
 clear_screen :-
-    write('\x1B[2J'), % Clear the screen
-    write('\x1B[H').  % Move cursor to home position
+    write('\x1B[2J'),
+    write('\x1B[H').  
 
-% Print kolom headers
+%rand schaakbord
 print_header :-
     write('+---+---+---+---+---+---+---+---+'), nl.
 
-% Print alle rijen met rijnummers
+% rij seperator
 print_rows([], _).
 print_rows([Row|Rest], Num) :-
     write('|'),
@@ -170,10 +177,10 @@ print_rows([Row|Rest], Num) :-
     NextNum is Num - 1,
     print_rows(Rest, NextNum).
 
-% Print individueel schaakstuk
+% print stuk af
 print_piece(Piece) :-
     Piece = '.',
     !,
-    write('   |'). % Geen punt tonen voor lege plekken
+    write('   |'). % skip lege plekken
 print_piece(Piece) :-
     write(' '), write(Piece), write(' |').

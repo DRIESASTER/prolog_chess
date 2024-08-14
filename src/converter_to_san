@@ -4,6 +4,27 @@
 :- use_module(rules).
 :- use_module(checks).
 
+
+convert_to_san(Board, Player, [FromRow, FromCol], [ToRow, ToCol],Promotion,History, SAN) :-
+    FromRow = 4, FromCol =4, ToRow = 3, ToCol = 5,!,
+(   is_castling_move(Board,FromRow, FromCol, ToRow, ToCol, SAN)
+;
+    piece_at(Board, FromRow, FromCol, Piece),
+    number_to_file(FromCol, _),
+    number_to_file(ToCol, ToFile),
+    number_to_rank(FromRow, _),
+    number_to_rank(ToRow, ToRank),
+    piece_identity(Piece, PieceChar),
+    disambiguate_move(Board, Player, Piece, FromRow, FromCol, ToRow, ToCol, Disamb, History),
+    capture_notation(Board, Piece,FromRow, FromCol, ToRow, ToCol, Capture),
+    move_results_in_check(Board, Player, FromRow-FromCol, ToRow-ToCol, Promotion,History, CheckStatus),
+    (   Promotion == none
+    ->  atomic_list_concat([PieceChar, Disamb, Capture, ToFile, ToRank, CheckStatus], SAN)
+    ;   upcase_atom(Promotion, PromotionChar),
+        atomic_list_concat([PieceChar, Disamb, Capture, ToFile, ToRank, '=', PromotionChar, CheckStatus], SAN)
+    )
+).
+
 %zet move om naar SAN notatie
 convert_to_san(Board, Player, [FromRow, FromCol], [ToRow, ToCol],Promotion,History, SAN) :-
 (   is_castling_move(Board,FromRow, FromCol, ToRow, ToCol, SAN)
@@ -23,6 +44,16 @@ convert_to_san(Board, Player, [FromRow, FromCol], [ToRow, ToCol],Promotion,Histo
         atomic_list_concat([PieceChar, Disamb, Capture, ToFile, ToRank, '=', PromotionChar, CheckStatus], SAN)
     )
 ).
+
+move_results_in_check(Board, Player, From, To, Promotion, History, CheckStatus) :-
+    From = 4-4, To = 3-5,!,
+    rules:enemy_color(Player, Opponent),
+    (Promotion = none -> 
+        apply_move(Board, Player, From, To, History, NewHistory, NewBoard)
+    ;   apply_move(Board, Player, From, To, Promotion, History, NewHistory, NewBoard)
+    ),
+    check_game_state(NewBoard, Opponent, NewHistory, State),
+    add_state_char(State, CheckStatus).
 
 %checked of move in schaak(mat) zal resulteren (+ of # toevoegen)
 move_results_in_check(Board, Player, From, To, Promotion, History, CheckStatus) :-

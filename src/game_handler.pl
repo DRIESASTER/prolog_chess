@@ -3,7 +3,8 @@
         process_game/1,
         switch_player/2,
         play_game/8,
-        play_loaded_game/1
+        play_loaded_game/1,
+        play_default_game/0
     ]).
 %deze module behandeld het verloop van het spel
 :- use_module(menu).
@@ -14,25 +15,27 @@
 :- use_module(converter).
 :- use_module(utils).
 
+play_default_game():-
+    initialize_game_settings(Variant, _, PWhite, _, AI),
+    initial_board(Board),
+    play_game(Board, white, AI, Variant, PWhite, [], [], _).
+
 play_loaded_game(game(Tags, Moves)) :-
-    extract_settings(Tags, PWhite, _, Variant, _),
+    extract_settings(Tags, PWhite, PBlack, Variant, _),
     board:initial_board(InitialBoard),
     execute_moves(InitialBoard, Moves, FinalBoard, [], History, white, CurrentPlayer),
     (PWhite = 'ai' -> Color = black ; Color = white),
     switch_player(Color, AI),
-    write(Variant-Color-PWhite-AI),nl,
-    initialize_game_settings(Variant, Color, PWhite, _, AI),
+    initialize_game_state(PWhite, PBlack),
     play_game(FinalBoard, CurrentPlayer, AI, Variant, PWhite, Moves, History, _).
 
 % start main spel loop voor interactieve modus, print startbord doet move, loop...
 play_game(Board, Player, AI, Variant, Name, Moves, History, FinalHistory) :-
-write(AI),
-    checks:check_game_state(Board, Player, History, State),
-    handle_game_state(State, Player, Moves, Variant),
     print_board(Board),
+    checks:check_game_state(Board, Player, History, State),
+    handle_game_state_interactive(State, Player, Moves, Variant),
     handle_move(Board, Player, AI, Variant,State, Name, Move, Moves, History, NewHistory, NewBoard),
     append(Moves, [Move], NewMoves),
-    write(NewMoves),
     switch_player(Player, NextPlayer),
     play_game(NewBoard, NextPlayer, AI, Variant, Name, NewMoves, NewHistory, FinalHistory).
 
@@ -86,15 +89,15 @@ ai_move(Board, Player, Variant, SAN, History, NewHistory, NewBoard) :-
         apply_move(Board, Player, From, To, History, NewHistory, NewBoard)
     ;   apply_move(Board, Player, From, To, Promotion, History, NewHistory, NewBoard)
     ),
-    convert_all_moves_to_san(Board, Player, [Move], NewHistory, [SAN]).
+    convert_all_moves_to_san(Board, Player, [Move], History, [SAN]).
 
 % lees input prompt en voer move uit als geldig anders herhaal
-prompt_and_move(Board, Player, Variant,State, _, Move, Moves, History, NewHistory, NewBoard) :-
+prompt_and_move(Board, Player, Variant,State, _, SAN, Moves, History, NewHistory, NewBoard) :-
     repeat,
     format('~w to move: ', [Player]),
-    read_user_input(Move),
-    handle_special_commands(Move, Variant,State, Moves),
-    process_move(Move, Board, Player, History, NewHistory, NewBoard).
+    read_user_input(MoveStr),
+    handle_special_commands(MoveStr, Variant,State, Moves),
+    process_move(MoveStr,SAN, Board, Player, History, NewHistory, NewBoard).
 
 % user input verwerken als move
 read_user_input(Move) :-
@@ -102,9 +105,10 @@ read_user_input(Move) :-
     string_codes(Move, Codes).
 
 
-% convert van SAN naar inwendig coord system en voert move uit
-process_move(MoveStr, Board, Player, History, NewHistory, NewBoard):-
+% convert van SAN naar inwendig coord system en voert move uit ik converteer dubbel zodat SAN notatie zeker correct is ie als speler e6 speelt en dit schaakmat zou zijn word dit intern opgeslagen als e6# bvb
+process_move(MoveStr,CorrectedMove, Board, Player, History, NewHistory, NewBoard):-
     convert_move(MoveStr, Board, Player, From, To, _,Promotion, History),
+    convert_all_moves_to_san(Board,Player,[[From,To,Promotion]], History, [CorrectedMove]),
     ( Promotion = none ->
         board:apply_move(Board,Player, From, To, History, NewHistory, NewBoard)
     ;   board:apply_move(Board,Player, From, To, Promotion, History, NewHistory, NewBoard)
@@ -112,8 +116,8 @@ process_move(MoveStr, Board, Player, History, NewHistory, NewBoard):-
 
 
 % simpele helper om mbv het convert_to_san module elke move naar SAN notatie om te zetten
-convert_all_moves_to_san(Board, Player, Moves, _, SANMoves) :-
-    findall(SAN, (member(Move, Moves), move_to_san(Board, Player, Move, Moves, SAN)), SANMoves).
+convert_all_moves_to_san(Board, Player, Moves, History, SANMoves) :-
+    findall(SAN, (member(Move, Moves), move_to_san(Board, Player, Move, History, SAN)), SANMoves).
 
 % idem maar deel 2
 move_to_san(Board, Player, [FromRow-FromCol, ToRow-ToCol,Promotion],History, SAN) :-
@@ -137,45 +141,67 @@ execute_moves_helper(Board, [MoveStr | RestMoves], FinalBoard,History, FinalHist
     switch_player(Player, NextPlayer),
     execute_moves_helper(NewBoard, RestMoves, FinalBoard, NewHistory, FinalHistory, NextPlayer, LastPlayer).
 
-% Handle stalemate
-handle_game_state(stalemate, _, Moves) :-
-    player(white, PlayerWhite),
-    player(black, PlayerBlack),
-    score(PlayerWhite, ScoreWhite),
-    score(PlayerBlack, ScoreBlack),
-    NewScoreWhite is ScoreWhite + 0.5,
-    NewScoreBlack is ScoreBlack + 0.5,
-    retract(score(PlayerWhite, _)),
-    assert(score(PlayerWhite, NewScoreWhite)),
-    retract(score(PlayerBlack, _)),
-    assert(score(PlayerBlack, NewScoreBlack)),
+handle_game_state_interactive(checkmate, WinnerColor, Moves, Variant):- !,
+    write('Game has ended due to checkmate!'),nl,
+    player(WinnerColor, WinnerName),
+    retract(score(WinnerName, _)),
+    assert(score(WinnerName, 1)),
+    format_previous_moves(Moves, 1, white,checkmate, MovesStr),
+    write(MovesStr),
+    update_and_display_scores(checkmate),
+    read_user_input(Command),
+    handle_special_commands(Command, Variant, checkmate, Moves).
+
+handle_game_state_interactive(koth, WinnerColor, Moves, Variant):- !,
+    write('Game has ended due to king of the hill!'),nl,
+    player(WinnerColor, WinnerName),
+    score(WinnerName, CurrentScore),
+    NewScore is CurrentScore + 1,
+    retract(score(WinnerName, _)),
+    assert(score(WinnerName, NewScore)),
+    format_previous_moves(Moves, 1, white,checkmate, MovesStr),
+    write(MovesStr),
+    update_and_display_scores(checkmate),
+    read_user_input(Command),
+    handle_special_commands(Command, Variant, checkmate, Moves).
+
+
+handle_game_state_interactive(stalemate, _, Moves, Variant):- !,
+    write('Game has ended due to stalemate!'), nl,
+    retract(score(_,_)),
+    player(white,Pw),
+    player(black,Pb),
+    assert(Pw,0.5),
+    assert(Pb,0.5),
     format_previous_moves(Moves, 1, white, stalemate, MovesStr),
     write(MovesStr),
     update_and_display_scores(stalemate),
-    halt.
+    read_user_input(Command),
+    handle_special_commands(Command, Variant, stalemate, Moves).
 
-% Handle normal state
+handle_game_state_interactive(_,_,_,_).
+
+
+% niks te doen
 handle_game_state(normal, _, _, _).
 handle_game_state(check, _, _, _).
 
-% Handle checkmate
-handle_game_state(checkmate, WinnerColor, Moves,_) :-
+% spel afronden
+handle_game_state(checkmate, WinnerColor, Moves, _) :-
     player(WinnerColor, WinnerName),
-    score(WinnerName, CurrentScore),
-    NewScore is CurrentScore + 1,  % Increment the winner's score
     retract(score(WinnerName, _)),
-    assert(score(WinnerName, NewScore)),  % Update the score
+    assert(score(WinnerName, 1)),
     format_previous_moves(Moves, 1, white,checkmate, MovesStr),
     write(MovesStr),
     update_and_display_scores(checkmate),
     halt.
 
+%zelfde als schaakmat
 handle_game_state(koth, WinnerColor, Moves, koth):-
+    write('Game has ended due to king of the hill!'),nl,
     player(WinnerColor, WinnerName),
-    score(WinnerName, CurrentScore),
-    NewScore is CurrentScore + 1,  % Increment the winner's score
     retract(score(WinnerName, _)),
-    assert(score(WinnerName, NewScore)),  % Update the score
+    assert(score(WinnerName, 1)),
     format_previous_moves(Moves, 1, white,checkmate, MovesStr),
     write(MovesStr),
     update_and_display_scores(checkmate),

@@ -104,7 +104,7 @@ all_pieces(Board, Color, Pieces) :-
     findall(Row-_, (member(Row, Board), member(Piece, Row), piece_color(Piece, Color)), Pieces).
 
 %%%move generation
-% Generate all legal moves for a single piece
+% genereerd elke mogelijke zet voor een stuk, zowel illegaal als legaal
 generate_moves_for_piece(Board, Color, FromRow, FromCol, History, Moves) :-
     piece_at(Board, FromRow, FromCol, Piece),
     findall([FromRow-FromCol, ToRow-ToCol, PromotionPiece], % Capture PromotionPiece in the result
@@ -113,24 +113,23 @@ generate_moves_for_piece(Board, Color, FromRow, FromCol, History, Moves) :-
             determine_move(Board, Color, FromRow, FromCol, ToRow, ToCol, Piece, PromotionPiece, History)
         ), Moves).
 
-% Determine the type of move based on piece and position
+% checked zet type (promotie, geen promotie) en of die legaal is
 determine_move(Board, Color, FromRow, FromCol, ToRow, ToCol, Piece, PromotionPiece, History) :-
-    (piece_type(Piece, pawn), % Check if the piece is a pawn
-    (ToRow == 1 ; ToRow == 8) -> % Pawn is at the promotion row
+    (piece_type(Piece, pawn),
+    (ToRow == 1 ; ToRow == 8) -> 
     member(Promotion, ['Q','R','B','N']), 
     converter:convert_to_correct_color(Promotion,Color,PromotionPiece),
     legal_move(Board, Color, FromRow-FromCol, ToRow-ToCol, PromotionPiece));
-    % Regular move for pawns or other pieces
+    %normale zet
     (PromotionPiece = none,
     legal_move(Board, Color, FromRow-FromCol, ToRow-ToCol, History)).
 
-% Utility predicate to get the symbol of a piece based on its type and color
+
 piece_symbol(Color, Type, Symbol) :-
-    % Assuming piece_type/2 maps a piece to its type as shown earlier
     piece_type(Symbol, Type),
     piece_color(Symbol, Color).
 
-% Generate all legal moves for all pieces of a specific color
+% genereerd alle mogelijke legale moves voor Color op dit ogenblik
 generate_all_moves(Board, Color, History, AllMoves) :-
     findall(Move,
             (   piece_at(Board, Row, Col, Piece),

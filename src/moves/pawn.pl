@@ -7,7 +7,6 @@
 :- use_module('../board').
 :- use_module('../rules').
 
-
 %test voor geldige pion zet, moet vooruit zijn, mag 2 stappen zijn vanuit startpositie, als diagonaal is moet het een capture zijn of en passant
 is_valid_pawn_move(Board, Piece, FromRow, FromCol, ToRow, ToCol, History) :-
     (
@@ -16,7 +15,7 @@ is_valid_pawn_move(Board, Piece, FromRow, FromCol, ToRow, ToCol, History) :-
             (
                 (NewToRow =:= ToRow, FromCol = ToCol, empty_at(Board, ToRow, ToCol));
                 (
-                    NewToRow =:= ToRow, abs(ToCol - FromCol) =:= 1, \+ empty_at(Board, ToRow, ToCol),
+                    NewToRow =:= ToRow, abs(ToCol - FromCol) =:=1, \+ empty_at(Board, ToRow, ToCol),
                     piece_at(Board,NewToRow,ToCol,TargetPiece),
                     \+same_color(_,Piece,TargetPiece)
                 );

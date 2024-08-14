@@ -19,6 +19,7 @@
 :- use_module('moves/knight').
 :- use_module(checks).
 
+
 % test of move legaal is
 legal_move(Board, Color, FromRow-FromCol, ToRow-ToCol, History) :-
     %check of piece niet leeg is

@@ -89,9 +89,12 @@ minimax(Board, Variant, Color, Depth, Alpha, Beta, BestMove, Value, History) :-
 handle_no_moves(Board, Color, Value) :-
     checks:is_in_check(Board, Color),
     (   checks:is_in_check(Board, Color)
-    ->  Value = -inf  % Checkmate scenario
+    ->  best_score(Color,Value) %schaakmat is ultieme scenario voor ons
     ;   Value = 0
     ).
+
+best_score(white,-1000).
+best_score(black,1000).
 
 max_value(_, _,[], Alpha, _, _, _, _, Value, _) :- 
     Value = Alpha.
@@ -144,6 +147,6 @@ opponent(black, white).
 
 choose_move(Board, Color, History, Variant, Move) :-
     Depth is 3,
-    minimax(Board,Variant, Color, Depth, -inf, inf, [From,To,Promotion], _, History),
+    minimax(Board,Variant, Color, Depth, -1000, 1000, [From,To,Promotion], _, History),
     Move = [From,To,Promotion].
 
